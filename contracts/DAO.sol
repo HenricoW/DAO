@@ -20,6 +20,8 @@ contract DAO {
         State status;
     }
     uint public constant MIN_SHARES_FOR_PROPOSAL = 10 ether;
+    uint public constant DEPOSIT_WINDOW = 1 hours;
+    uint public constant VOTING_WINDOW = 1 hours;
 
     mapping (bytes32 => Proposal) public proposals; // keep track of proposals
     mapping (address => mapping (bytes32 => bool)) public voted; // keep track of who voted
@@ -57,7 +59,8 @@ contract DAO {
 
     function vote(uint _shares, Side side, bytes32 propHash) external {
         require(proposals[propHash].proposalHash != bytes32(0), "Proposal does not exist");
-        require(block.timestamp >= (proposals[propHash].createdAt + 1 hours), "Past proposal deadline");
+        require(block.timestamp >= (proposals[propHash].createdAt + DEPOSIT_WINDOW), "Too early. Deposit window still open");
+        require(block.timestamp <= (proposals[propHash].createdAt + DEPOSIT_WINDOW + VOTING_WINDOW), "Past voting deadline");
         require(voted[msg.sender][propHash] == false, "Already voted");
 
         if(side == Side.Yes){
